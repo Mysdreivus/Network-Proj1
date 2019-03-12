@@ -48,33 +48,10 @@ def CreateServerSocket(port):
   # coming from other computers on the network 
   s.bind(('', port))
   print("socket binded to {}".format(port))
+
+  print("Server is listening")
+  s.listen(5)
   return s
-
-def ConnectClientToServer(server_sock):
-    # Wait until a client connects and then get a socket that connects to the
-    # client.
-    
-
-    #############################################
-    #TODO: Implement CreateClientSocket Function
-    #############################################
-
-    server_sock.listen(5)
-
-    # Establish connection with client
-    conn, addr = server_sock.accept()
-    print("Connection established from {}".format(addr))
-
-    # This will send a message to the client that connected
-    conn.send('You connected')
-
-    # Close the connection with the client
-    # conn.close()
-    conn_port = conn.getsockname()[1]
-    print("client listening on port: {}".format(conn_port))
-    # conn is the client socket, addr is the address
-
-    return conn, (addr, conn_port)
 
 def CreateClientSocket(server_addr, port):
   """Creates a socket that connects to a port on a server."""
@@ -87,9 +64,29 @@ def CreateClientSocket(server_addr, port):
   client_sock.connect((server_addr, port))
 
   data = client_sock.recv(COMMAND_BUFFER_SIZE)
+  
   print("Data received from server  is {}".format(data))
 
-  client_sock.close()
+def ConnectClientToServer(server_sock):
+    # Wait until a client connects and then get a socket that connects to the
+    # client.
+    
+
+    #############################################
+    #TODO: Implement CreateClientSocket Function
+    #############################################
+
+    # Establish connection with client
+    conn, addr = server_sock.accept()
+
+    # This will send a message to the client that connected
+    # conn.send('You connected\n')
+    
+    conn_port = conn.getsockname()[1]
+    # print("client listening on port: {}".format(conn_port))
+    # conn is the client socket, addr is the address
+
+    return conn, (addr, conn_port)
 
 def ReadCommand(sock):
   """Read a single command from a socket. The command must end in newline."""
@@ -97,8 +94,9 @@ def ReadCommand(sock):
   #############################################
   #TODO: Implement ReadCommand Function
   #############################################
-  data = sock.recv(COMMAND_BUFFER_SIZE)
-  print("This is the Read Command function in library with data : {}".format(data))
+  data = sock.recv(COMMAND_BUFFER_SIZE).decode()
+  print("{}".format(data))
+  return data
 
   
 

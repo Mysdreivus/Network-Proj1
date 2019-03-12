@@ -36,6 +36,7 @@ from __future__ import print_function
 # A few commands are used by both the server and the proxy server. Those
 # functions are in library.py.
 import library
+import csv
 
 
 # The port that we accept connections on. (A.k.a. "listen" on.)
@@ -64,9 +65,11 @@ def PutCommand(name, text, database):
   database.StoreValue(name, text)
   placed_info = database.storage[name]
   if ( placed_info != text ):
-    error = "There was an error storing the data"
+    message = "There was an error storing the data"
   else:
-    error = "The key : value pair {} : {} was stored".format(name, text)
+    message = "{} = {}".format(name, text)
+  
+  return message
 
 
 
@@ -86,6 +89,13 @@ def GetCommand(name, database):
   #TODO: Implement GET function
   ##########################################
 
+  data = database.GetValue(name)
+  if ( data != None ):
+    message = data
+  else:
+    message = "This key is not in the database"
+  return message
+
 
 def DumpCommand(database):
   """Creates a function to handle the DUMP command for a server.
@@ -102,12 +112,32 @@ def DumpCommand(database):
   ##########################################
   #TODO: Implement DUMP function
   ##########################################
+
+  keys = database.Keys()
+
+  # Write to the csv file
+  csv_file = open('keys.csv', 'w')
+  with csv_file:
+    writer = csv.writer(csv_file)
+    writer.writerows(keys)
   
- 
+  final_key_string = ""
+  for key in keys:
+    final_key_string += key + "\n"
+  
+  # Return the string that has all the information
+  print(final_key_string)
+  return final_key_string
+
+
+
+
 
 
 def SendText(sock, text):
   """Sends the result over the socket along with a newline."""
+  # text = text + "\n"
+  # sock.send(text.encode())
   sock.send('%s\n' % text)
 
 
@@ -139,10 +169,12 @@ def main():
     else:
       SendText(client_sock, 'Unknown command %s' % command)
 
+    # print("This is where we send something to the client socket")
+    # print(result)
     SendText(client_sock, result)
 
-    # We're done with the client, so clean up the socket.
-    client_sock.close()
+  # We're done with the client, so clean up the socket.
+  client_sock.close()
 
   #################################
   #TODO: Close socket's connection

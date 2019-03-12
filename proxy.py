@@ -63,20 +63,17 @@ def ForwardCommandToServer(command, server_addr, server_port):
 
 def CheckCachedResponse(command_line, cache):
   cmd, name, text = library.ParseCommand(command_line)
+  # print("cmd => {} name => {} text=> {}".format(cmd, name, text))
 
   # Update the cache for PUT commands but also pass the traffic to the server.
   ##########################
   #TODO: Implement section
   ##########################
 
-  status = []
-  status[0] = True
-
   if ( cmd == "PUT" ):
     # Store the key value pair name : text
     cache.StoreValue(name, text)
-    status[0] = False
-    status[1] = None
+    return "Not in cache"
 
   # GET commands can be cached.
 
@@ -86,22 +83,18 @@ def CheckCachedResponse(command_line, cache):
 
   if ( cmd == "GET" ):
     # Get value of key, where key => name
-    data = cache.GetValue(name)
-    if data == None:
-      status[0] = False
-      status[1] = None
+    if name in cache.storage:
+      return cache.GetValue(name)
     else:
-      status[1] = data
+      return "Not in cache"
   
   if ( cmd == "DUMP" ):
     # print everything
     keys = cache.Keys()
-    info = []
+    info = ""
     for key in keys:
-      info.append(cache.GetValue(key))
-      status[1] = info
-  
-  return status
+      info += (cache.GetValue(key)) + "\n"
+    return info
 
 
 def ProxyClientCommand(sock, server_addr, server_port, cache):
@@ -124,24 +117,33 @@ def ProxyClientCommand(sock, server_addr, server_port, cache):
   #TODO: Implement ProxyClientCommand
   ###########################################
 
-  data = sock.recv(library.COMMAND_BUFFER_SIZE)
+  data = sock.recv(library.COMMAND_BUFFER_SIZE).decode()
+  print("The data received is {}".format(data))
 
-  info_from_cache =  CheckCachedResponse(data, cache)
-  if ( info_from_cache[0] == False ):
+  info_from_cache = CheckCachedResponse(data, cache)
+  print(info_from_cache)
+
+  if ( info_from_cache == "Not in cache" ):
     # Forward the request to the server
     proxy_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    proxy_socket.bind((server_addr, server_port))
+    proxy_socket.connect((server_addr, server_port))
 
     # Forward the data to the server
     proxy_socket.send(data)
-    # close?
-    # proxy_socket.close()
+
+    new_data = proxy_socket.recv(library.COMMAND_BUFFER_SIZE).decode()
+    print("This is the data received")
+    print(new_data)
+
+    sock.send(new_data)
+    sock.close()
 
 
   else:
     # Sending the data directly from the cache back to the client
-
-    sock.send( info_from_cache[1] )
+    info_from_cache += "\n"
+    sock.send(info_from_cache)
+    sock.close()
 
 
 
@@ -161,6 +163,8 @@ def main():
   #################################
   #TODO: Close socket's connection
   #################################
+
+  client_sock.close()
 
   server_sock.close()
 
