@@ -164,10 +164,26 @@ class KeyValueStore(object):
     #TODO: Implement GetValue Function
     ###########################################
 
-    if (key in self.storage):
-      return self.storage[key]
+    if ( max_age_in_sec == None ):
+      if (key in self.storage):
+        return self.storage[key]
+      else:
+        return "Not in database"
+
+    time_now = time.time()
+    if ( key in self.storage ):
+      time_then = self.storage[key][1]
+      # Get the time that passed in seconds
+      time_passed = (time_now - time_then)
+      print("Time passed for this key is {}".format(time_passed))
+      if ( time_passed < max_age_in_sec ):
+        return self.storage[key][0]
+      else:
+        # We need to update the time to now since we are gonna go to the server
+        self.storage[key][1] = time.time()
+        return "Not in cache"
     else:
-      return None
+      return "Not in cache"
 
 
 
@@ -183,7 +199,12 @@ class KeyValueStore(object):
     #TODO: Implement StoreValue Function
     ###########################################
 
-    self.storage[key] = value
+    value_time = []
+    # Store the value and the time the value wanted to be stored
+    value_time.append(value)
+    value_time.append(time.time())
+
+    self.storage[key] = value_time
     return
 
     
@@ -195,12 +216,13 @@ class KeyValueStore(object):
     #TODO: Implement Keys Function
     ###########################################
 
-    print("A list of all the keys are as shown below")
+    # print("A list of all the keys are as shown below")
 
     list_of_keys = []
     for key in self.storage.keys():
-      list_of_keys.append(key)
-      print("{}".format(key))
+      if ( self.storage[key] != None ):
+        list_of_keys.append(key)
+        print("{}".format(key))
     return list_of_keys
     
 

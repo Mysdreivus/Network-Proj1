@@ -71,7 +71,7 @@ def CheckCachedResponse(command_line, cache):
   ##########################
 
   if ( cmd == "PUT" ):
-    # Store the key value pair name : text
+    # Store the key value pair name : text and then return Not in cache so we head to the server
     cache.StoreValue(name, text)
     return "Not in cache"
 
@@ -82,19 +82,17 @@ def CheckCachedResponse(command_line, cache):
   ############################
 
   if ( cmd == "GET" ):
+    print("This is the getting in the cache")
     # Get value of key, where key => name
     if name in cache.storage:
-      return cache.GetValue(name)
+      return cache.GetValue(name, MAX_CACHE_AGE_SEC)
     else:
       return "Not in cache"
   
   if ( cmd == "DUMP" ):
-    # print everything
-    keys = cache.Keys()
-    info = ""
-    for key in keys:
-      info += (cache.GetValue(key)) + "\n"
-    return info
+    # This is so that when we call the DUMP Command we only get it from the server, since DUMP
+    # shouldn't be cached
+    return "Not in cache"
 
 
 def ProxyClientCommand(sock, server_addr, server_port, cache):
@@ -135,12 +133,30 @@ def ProxyClientCommand(sock, server_addr, server_port, cache):
     print("This is the data received")
     print(new_data)
 
+    if ( new_data != "This key is not in the database" ):
+      # Update the cache in the proxy
+      # print("The new data is => {}".format(new_data))
+      my_cmd, my_name, my_text = library.ParseCommand(data)
+      if ( my_cmd == "GET" ):
+        # print("Key and value are => {} and {}".format(my_name, new_data))
+        cache.StoreValue(my_name, new_data)
+
+    if ( new_data == None ):
+      new_data = "No data was stored in this key\n"
     sock.send(new_data)
     sock.close()
 
 
   else:
     # Sending the data directly from the cache back to the client
+    print("Sending directly from cache")
+    if (info_from_cache == None):
+      my_cmd, my_name, my_text = library.ParseCommand(data)
+      possible_cmds = ("GET", "PUT")
+      if ( my_cmd in possible_cmds ):
+        info_from_cache = "No data was stored in this key"
+      else:
+        info_from_cache = "Error command"
     info_from_cache += "\n"
     sock.send(info_from_cache)
     sock.close()

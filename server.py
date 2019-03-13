@@ -63,7 +63,7 @@ def PutCommand(name, text, database):
   ##########################################
 
   database.StoreValue(name, text)
-  placed_info = database.storage[name]
+  placed_info = database.storage[name][0]
   if ( placed_info != text ):
     message = "There was an error storing the data"
   else:
@@ -90,8 +90,8 @@ def GetCommand(name, database):
   ##########################################
 
   data = database.GetValue(name)
-  if ( data != None ):
-    message = data
+  if ( data != "Not in database" ):
+    message = data[0]
   else:
     message = "This key is not in the database"
   return message
@@ -123,10 +123,9 @@ def DumpCommand(database):
   
   final_key_string = ""
   for key in keys:
-    final_key_string += key + "\n"
+    final_key_string += key + ", " + database.GetValue(key)[0] + "\n"
   
   # Return the string that has all the information
-  print(final_key_string)
   return final_key_string
 
 
@@ -173,8 +172,9 @@ def main():
     # print(result)
     SendText(client_sock, result)
 
-  # We're done with the client, so clean up the socket.
-  client_sock.close()
+    
+    # We're done with the client, so clean up the socket.
+    client_sock.close()
 
   #################################
   #TODO: Close socket's connection
