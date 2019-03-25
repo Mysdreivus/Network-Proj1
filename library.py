@@ -175,7 +175,7 @@ class KeyValueStore(object):
       time_then = self.storage[key][1]
       # Get the time that passed in seconds
       time_passed = (time_now - time_then)
-      print("Time passed for this key is {}".format(time_passed))
+      # print("Time passed for this key is {}".format(time_passed)) For debugging purposes
       if ( time_passed < max_age_in_sec ):
         return self.storage[key][0]
       else:

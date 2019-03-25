@@ -53,7 +53,8 @@ def ForwardCommandToServer(command, server_addr, server_port):
   data = s.recv(library.COMMAND_BUFFER_SIZE)
   s.close()
 
-  print("The data received was: {}".format(data))
+  # For debugging purposes
+  # print("The data received was: {}".format(data))
   return data
 
 
@@ -82,7 +83,6 @@ def CheckCachedResponse(command_line, cache):
   ############################
 
   if ( cmd == "GET" ):
-    print("This is the getting in the cache")
     # Get value of key, where key => name
     if name in cache.storage:
       return cache.GetValue(name, MAX_CACHE_AGE_SEC)
@@ -116,10 +116,10 @@ def ProxyClientCommand(sock, server_addr, server_port, cache):
   ###########################################
 
   data = sock.recv(library.COMMAND_BUFFER_SIZE).decode()
-  print("The data received is {}".format(data))
+  # print("The data received is {}".format(data))
 
   info_from_cache = CheckCachedResponse(data, cache)
-  print(info_from_cache)
+  # print(info_from_cache)
 
   if ( info_from_cache == "Not in cache" ):
     # Forward the request to the server
@@ -130,7 +130,7 @@ def ProxyClientCommand(sock, server_addr, server_port, cache):
     proxy_socket.send(data)
 
     new_data = proxy_socket.recv(library.COMMAND_BUFFER_SIZE).decode()
-    print("This is the data received")
+    # print("This is the data received")
     print(new_data)
 
     if ( new_data != "This key is not in the database" ):
@@ -149,7 +149,7 @@ def ProxyClientCommand(sock, server_addr, server_port, cache):
 
   else:
     # Sending the data directly from the cache back to the client
-    print("Sending directly from cache")
+    # print("Sending directly from cache") for debugging purposes
     if (info_from_cache == None):
       my_cmd, my_name, my_text = library.ParseCommand(data)
       possible_cmds = ("GET", "PUT")
